@@ -1,0 +1,12 @@
+Package: ehcvmpoverty
+Title: Analyse de la pauvrete
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Prosper", "LAWA", , "lawafoum@gmail.com", role = c("aut", "cre")),
+    person("Samba", "DIENG", , "sambadiengys122003@gmail.com", role = "aut")
+  )
+Description: Analyse de la pauvrete.
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
