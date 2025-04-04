@@ -1,0 +1,16 @@
+---
+title: "poverty"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{poverty}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup}
+library(poverty)
+```
+
+# Description
+
+Ce package vise à faciliter l'analyse de pauvrete.
