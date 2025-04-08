@@ -23,12 +23,12 @@ utils::globalVariables(c("Part_Population", "Part_Revenu"))
 #' )
 #'
 #' # Courbes globales
-#' lorenz_curve(df, variable = "revenu")
+#' inequality_curve(df, variable = "revenu")
 #'
 #' # Courbes par sexe
-#' lorenz_curve(df, variable = "revenu", separateur = "sexe")
+#' inequality_curve(df, variable = "revenu", separateur = "sexe")
 
-lorenz_curve <- function(data, variable, separateur = NULL) {
+inequality_curve <- function(data, variable, separateur = NULL) {
 
   if (!variable %in% names(data)) {
     stop("La variable specifiee n'existe pas dans les donnees.")
