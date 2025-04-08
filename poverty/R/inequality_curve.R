@@ -54,7 +54,7 @@ lorenz_curve <- function(data, variable, separateur = NULL) {
     lorenz_data <- data.frame(Part_Population = lorenz_data$p, Part_Revenu = lorenz_data$L)
 
     lorenz_plot <- ggplot2::ggplot(lorenz_data, ggplot2::aes(x = Part_Population, y = Part_Revenu)) +
-      ggplot2::geom_line(color = "#d7301f", size = 1.5) +
+      ggplot2::geom_line(color = "#d7301f", linewidth = 1.5) +  # <- Correction ici
       ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
       ggplot2::labs(title = paste("Courbe de Lorenz -", group_name),
                     x = "Part cumulee de la population",

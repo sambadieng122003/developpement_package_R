@@ -15,10 +15,12 @@ Depends:
 LazyData: true
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Imports:
     dplyr,
     ggplot2,
     ineq,
     forcats
+Config/testthat/edition: 3
