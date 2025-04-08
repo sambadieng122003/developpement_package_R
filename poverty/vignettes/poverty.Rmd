@@ -7,10 +7,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup}
+## Introduction
+
+Le package **poverty** est conçu pour faciliter l'analyse de la pauvreté et des inégalités économiques. Il fournit des outils pour calculer et visualiser des indicateurs de pauvreté, des indices d'inégalité, et pour analyser la répartition des revenus ou de la consommation au sein d'une population.
+
+## Installation
+
+Avant d'utiliser le package, assurez-vous qu'il est installé et chargé dans votre environnement R. Vous pouvez installer le package à partir de CRAN ou de GitHub, selon où il est disponible :
+
+```{r}
 library(poverty)
 ```
-
-# Description
-
-Ce package vise à faciliter l'analyse de pauvrete.

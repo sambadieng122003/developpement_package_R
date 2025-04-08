@@ -15,5 +15,15 @@ population_distribution(data, separateur)
 Un graphique et un tableau recapitulatif de la repartition.
 }
 \description{
-Analyse la repartition de la population par categories
+Cette fonction permet d'analyser la repartition d'une population selon une variable categorielle donnee.
+}
+\examples{
+
+# Exemple avec des données fictives
+df <- data.frame(
+  sexe = c("Homme", "Femme", "Homme", "Femme", "Homme", "Femme"),
+  age = c(30, 25, 35, 40, 45, 50)
+)
+# Analyser la répartition par sexe
+population_distribution(df, separateur = "sexe")
 }

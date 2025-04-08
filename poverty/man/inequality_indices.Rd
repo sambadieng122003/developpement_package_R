@@ -2,26 +2,34 @@
 % Please edit documentation in R/inequality_indices.R
 \name{inequality_indices}
 \alias{inequality_indices}
-\title{Calcul des indices d'inegalite}
+\title{Calcul des indices de Gini et de Theil}
 \usage{
 inequality_indices(data, variable, separateur = NULL)
 }
 \arguments{
 \item{data}{Un data frame contenant les donnees.}
 
-\item{variable}{Nom de la variable representant le revenu ou la consommation.}
+\item{variable}{Nom de la variable numerique (revenu ou consommation).}
 
-\item{separateur}{Nom de la colonne permettant une analyse par sous-groupes (ex. sexe, region, milieu).}
+\item{separateur}{Nom de la colonne de regroupement pour une analyse par sous-groupes (facultatif).}
 }
 \value{
-Une liste contenant :
-\itemize{
-\item La courbe de Lorenz
-\item L'indice de Gini
-\item L'indice de Theil
-}
+Une data.frame contenant les indices de Gini et de Theil.
 }
 \description{
-Cette fonction permet de calculer plusieurs indices d'inegalite economique,
-notamment la courbe de Lorenz, l'indice de Gini et l'indice de Theil.
+Cette fonction calcule deux indicateurs d'inegalite economique :
+l'indice de Gini et l'indice de Theil, globalement ou par sous-groupes.
+}
+\examples{
+# Exemple simple avec des donnees fictives
+df <- data.frame(
+  revenu = c(100, 200, 300, 400, 1000, 2000),
+  sexe = c("Homme", "Femme", "Homme", "Femme", "Homme", "Femme")
+)
+
+# Calcul global des indices
+inequality_indices(df, variable = "revenu")
+
+# Calcul par sexe
+inequality_indices(df, variable = "revenu", separateur = "sexe")
 }

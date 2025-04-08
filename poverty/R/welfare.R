@@ -1,4 +1,4 @@
-#' Données de bien-être socio-économique (EHCVM, Sénégal 2018)
+#' Données sur le bien-être socio-économique (EHCVM, Sénégal 2018)
 #'
 #' Ce jeu de données provient de l'Enquête Harmonisée sur les Conditions de Vie des Ménages (EHCVM) réalisée au Sénégal en 2018.
 #' Il contient des informations détaillées sur les conditions socio-économiques des ménages, notamment leurs revenus, dépenses et caractéristiques démographiques.

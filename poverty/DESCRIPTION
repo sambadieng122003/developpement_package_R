@@ -18,7 +18,6 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Imports:
-    DescTools,
     dplyr,
     ggplot2,
     ineq,

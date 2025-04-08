@@ -3,7 +3,7 @@
 \docType{data}
 \name{welfare}
 \alias{welfare}
-\title{Données de bien-être socio-économique (EHCVM, Sénégal 2018)}
+\title{Données sur le bien-être socio-économique (EHCVM, Sénégal 2018)}
 \format{
 Un data frame avec 35 variables :
 \describe{
