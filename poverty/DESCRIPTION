@@ -19,6 +19,8 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Imports:
+    haven,
+    DescTools,
     dplyr,
     ggplot2,
     ineq,

@@ -2,28 +2,33 @@
 % Please edit documentation in R/population_distribution.R
 \name{population_distribution}
 \alias{population_distribution}
-\title{Analyse la repartition de la population par categories}
+\title{Analyse la repartition de la population par variable}
 \usage{
-population_distribution(data, separateur)
+population_distribution(data, separateur, poids = NULL)
 }
 \arguments{
 \item{data}{Un data.frame contenant les donnees.}
 
-\item{separateur}{Une chaîne de caractères indiquant la variable par laquelle effectuer la repartition.}
+\item{separateur}{Une chaîne de caractères indiquant la variable à analyser.}
+
+\item{poids}{(optionnel) Une chaîne de caractères indiquant le nom de la variable de ponderation.}
 }
 \value{
-Un graphique et un tableau recapitulatif de la repartition.
+Un graphique (barplot ou histogramme) et l'impression en console d'un tableau de statistiques ou de repartition.
 }
 \description{
-Cette fonction permet d'analyser la repartition d'une population selon une variable categorielle donnee.
+Cette fonction permet d'analyser la repartition d'une population selon une variable donnee.
+\itemize{
+\item Si la variable est qualitative, elle affiche un tableau de repartition (ponderee ou non) et un graphique en barres.
+\item Si elle est quantitative, elle affiche des statistiques univariees avec DescTools et un histogramme.
+}
 }
 \examples{
-
-# Exemple avec des données fictives
 df <- data.frame(
   sexe = c("Homme", "Femme", "Homme", "Femme", "Homme", "Femme"),
-  age = c(30, 25, 35, 40, 45, 50)
+  age = c(30, 25, 35, 40, 45, 50),
+  poids = c(1, 2, 1, 1, 3, 2)
 )
-# Analyser la répartition par sexe
-population_distribution(df, separateur = "sexe")
+population_distribution(df, separateur = "sexe", poids = "poids")
+population_distribution(df, separateur = "age")
 }
