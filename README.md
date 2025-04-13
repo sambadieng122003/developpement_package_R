@@ -1,4 +1,5 @@
 ## DEVELOPPEMENT DE PACKAGE AVEC R PAR PROSPER LAWA FOUMSOU ET SAMBA DIENG
+voici le lien de l'appli 👉 [Dashboard sécurité UEMOA](https://ahmedniass.shinyapps.io/Dashboard_UEMOA_securite/)
 # 📦 poverty
 
 **poverty** est un projet de développement de package visant à calculer des indicateurs de pauvreté et d'inégalité et d'évaluer des impacts de politique de transferts monétaires contre la pauvreté. Il permet de générer des tableaux et des graphiques automatiquement, exportés dans un fichier Excel structuré par feuille, afin de faciliter l'analyse socio-économique.
