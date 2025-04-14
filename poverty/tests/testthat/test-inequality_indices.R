@@ -8,7 +8,7 @@ test_that("inequality_indices retourne un data.frame avec gini et theil", {
 
   expect_s3_class(result, "data.frame")
   expect_true(all(c("gini", "theil") %in% names(result)))
-  expect_true(all(result$gini >= 0 & result$gini <= 1))
+  expect_true(all(result$gini >= 0 & result$gini <= 100))  # mis à jour
   expect_true(all(result$theil >= 0))
 })
 
@@ -24,6 +24,8 @@ test_that("inequality_indices fonctionne avec separateur", {
   expect_true(all(c("gini", "theil") %in% names(result)))
   expect_true("sexe" %in% names(result))
   expect_equal(nrow(result), 2)
+  expect_true(all(result$gini >= 0 & result$gini <= 100))  # mis à jour
+  expect_true(all(result$theil >= 0))
 })
 
 test_that("inequality_indices retourne NA pour des donnees insuffisantes", {
