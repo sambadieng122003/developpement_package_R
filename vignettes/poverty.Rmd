@@ -22,7 +22,7 @@ Avant d'utiliser le package, assurez-vous qu'il est installé et chargé dans vo
 Pour installer le package depuis GitHub :
 
 ```{r, eval=FALSE}
-remotes::install_github("https://github.com/sambadieng122003/developpement_package_R", dependencies = TRUE)
+remotes::install_github("https://github.com/sambadieng122003/poverty", dependencies = TRUE)
 
 ```
 
