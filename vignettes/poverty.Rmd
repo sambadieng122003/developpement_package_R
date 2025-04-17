@@ -1,6 +1,10 @@
 ---
 title: "poverty"
-output: rmarkdown::html_vignette
+author: "LAWA FOUMSOU Prosper, Samba DIENG"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: yes
+    toc: true
 vignette: >
   %\VignetteIndexEntry{poverty}
   %\VignetteEngine{knitr::rmarkdown}
@@ -13,8 +17,179 @@ Le package **poverty** est conçu pour faciliter l'analyse de la pauvreté et de
 
 ## Installation
 
-Avant d'utiliser le package, assurez-vous qu'il est installé et chargé dans votre environnement R. Vous pouvez installer le package à partir de CRAN ou de GitHub, selon où il est disponible :
+Avant d'utiliser le package, assurez-vous qu'il est installé et chargé dans votre environnement R. Vous pouvez installer de GitHub:
 
-```{r}
+Pour installer le package depuis GitHub :
+
+```{r, eval=FALSE}
+remotes::install_github("https://github.com/sambadieng122003/developpement_package_R", dependencies = TRUE)
+
+```
+
+
+```{r, eval=FALSE}
+# loading the package
 library(poverty)
 ```
+
+
+Trois outils principaux sont utilisés pour mesurer les inégalités :
+
+- **L’indice de Gini**, le plus connu et le plus utilisé,
+- **L’indice de Theil**, issu de la théorie de l’entropie,
+- **La courbe de Lorenz**, représentation graphique intuitive des inégalités.
+
+# Indice de Gini
+
+## Définition
+
+L’indice de Gini est une mesure synthétique de la concentration d’une distribution. Il varie entre :
+
+- **0** : égalité parfaite (tous les individus ont la même part de revenu ou de consommation),
+- **1** : inégalité absolue (un seul individu détient toute la richesse, les autres n'ont rien).
+
+## Formule
+
+```{r, eval=FALSE}
+G = \frac{\sum_{i=1}^{n}\sum_{j=1}^{n} |y_i - y_j|}{2n^2\bar{y}}
+```
+
+avec :
+- \(y_i\) : revenu de l’individu \(i\),
+- \(\bar{y}\) : revenu moyen,
+- \(n\) : taille de la population.
+
+## Interprétation
+
+- **Gini \u2248 0** : société égalitaire
+- **Gini élevé (ex. 50%)** : forte concentration de richesse
+- Insensible à la structure des extrêmes (très hauts revenus)
+
+# Indice de Theil
+
+## Définition
+
+L’indice de Theil provient de la théorie de l’information. Il mesure l’écart entre la distribution observée et une distribution parfaitement égalitaire. Contrairement au Gini, il est **décomposable** (utile pour les comparaisons entre sous-groupes).
+
+```{r, eval=FALSE}
+T = \frac{1}{n} \sum_{i=1}^{n} \frac{y_i}{\bar{y}} \log\left( \frac{y_i}{\bar{y}} \right)
+```
+
+## Propriétés
+
+- \(T = 0\) : égalité parfaite
+- \(T\) croît avec l'inégalité
+- Sensible aux revenus élevés
+
+## Avantage principal
+
+L'indice de Theil est **entrièrement décomposable** :
+
+```{r, eval=FALSE}
+T_{\text{total}} = T_{\text{intra-groupes}} + T_{\text{inter-groupes}}
+```
+
+Utile pour les comparaisons entre groupes (zones rurales vs urbaines, sexes, etc).
+
+# Courbe de Lorenz
+
+## Définition
+
+La courbe de Lorenz est une représentation graphique de la distribution du revenu ou de la consommation.
+
+- Axe horizontal : proportion cumulée de la population (du plus pauvre au plus riche)
+- Axe vertical : proportion cumulée du revenu ou consommation
+
+## Lecture
+
+- Elle commence en (0,0) et se termine en (1,1)
+- La **diagonale** représente l'égalité parfaite
+- Plus la courbe est **courbée vers le bas**, plus les inégalités sont fortes
+
+## Lien avec l'indice de Gini
+
+L'indice de Gini correspond à deux fois l'aire entre la courbe de Lorenz et la diagonale :
+
+```{r, eval=FALSE}
+G = 2 \cdot \text{Aire entre les deux courbes}
+```
+
+# Données intégrées : `welfare`
+
+Le package inclut une base de données nommée `welfare`, inspirée de l’EHCVM Sénégal 2018, qui contient :
+
+```{r eval=FALSE}
+data(welfare)
+str(welfare)
+head(welfare)
+```
+
+Elle comprend des variables comme `region`, `milieu`, `hgender`, `age`, `revenu`, `pcexp`, `hhweight` et d’autres données socioéconomiques utiles à l’analyse de la pauvreté.
+
+# Courbe de Lorenz
+
+La fonction `inequality_curve()` permet de générer une courbe de Lorenz, globalement ou par sous-groupe (ex: par sexe, par région).
+
+```{r eval=FALSE}
+# Courbe globale
+inequality_curve(welfare, variable = "pcexp")
+
+# Courbe par région
+inequality_curve(welfare, variable = "pcexp", separateur = "region")
+```
+
+La fonction retourne soit un graphique `ggplot2`, soit une liste de graphiques si l’option `separateur` est utilisée.
+
+# Répartition de la population
+
+La fonction `population_distribution()` permet d’étudier la répartition d’une variable qualitative (sexe, région...) ou quantitative (âge, revenu...) avec ou sans pondération :
+
+```{r eval=FALSE}
+# Variable qualitative
+population_distribution(welfare, separateur = "milieu")
+
+# Variable quantitative pondérée
+population_distribution(welfare, separateur = "age", poids = "hhweight")
+```
+
+# Indices d'inégalité : Gini et Theil
+
+La fonction `inequality_indices()` calcule les indices de Gini et de Theil, globalement ou par sous-groupe :
+
+```{r eval=FALSE}
+# Indices globaux
+inequality_indices(welfare, variable = "pcexp")
+
+# Indices par région
+inequality_indices(welfare, variable = "pcexp", separateur = "region")
+```
+
+Les résultats sont retournés sous forme de `data.frame` avec des valeurs exprimées en pourcentage.
+
+# Gestion des variables labellisées (`haven`)
+
+Toutes les fonctions reconnaissent automatiquement les colonnes importées via le package `haven` (ex. : SPSS, Stata, etc.) et adaptent les traitements en conséquence :
+
+- Conversion des labels en facteurs pour les séparateurs (ex: sexe, région)
+- Suppression des labels pour les variables numériques (revenu, consommation)
+
+# Conclusion
+
+Le package `poverty` a été conçu pour faciliter la production d’analyses descriptives dans le cadre des études sur la pauvreté et les inégalités. Grâce à des fonctions cohérentes, il permet de :
+
+- Calculer et comparer des indicateurs classiques ;
+- Visualiser la distribution des revenus ;
+- Automatiser l’exploration de bases comme celles de l’EHCVM ;
+- Générer rapidement des résultats exploitables pour la recherche ou le reporting institutionnel.
+
+Pour plus de détails, consultez les aides spécifiques :
+
+```{r}
+?inequality_curve
+?population_distribution
+?inequality_indices
+?welfare
+```
+
+
+
