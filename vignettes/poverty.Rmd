@@ -1,195 +1,396 @@
 ---
-title: "poverty"
-author: "LAWA FOUMSOU Prosper, Samba DIENG"
+title: "Analyse de la pauvreté et des inégalités avec le package {poverty}"
+author: "Auteurs : Samba DIENG et Prosper Lawa FOUMSOU"
+date: "r Sys.Date()"
 output: 
-  rmarkdown::html_vignette:
-    fig_caption: yes
+  pdf_document:
+    latex_engine: xelatex
     toc: true
+    toc_depth: 2
+  html_document:
+    toc: true
+    toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{poverty}
+  %\VignetteIndexEntry{Analyse de la pauvreté avec le package poverty}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-## Introduction
-
-Le package **poverty** est conçu pour faciliter l'analyse de la pauvreté et des inégalités économiques. Il fournit des outils pour calculer et visualiser des indicateurs de pauvreté, des indices d'inégalité, et pour analyser la répartition des revenus ou de la consommation au sein d'une population.
-
-## Installation
-
-Avant d'utiliser le package, assurez-vous qu'il est installé et chargé dans votre environnement R. Vous pouvez installer de GitHub:
-
-Pour installer le package depuis GitHub :
-
-```{r, eval=FALSE}
-remotes::install_github("https://github.com/sambadieng122003/poverty", dependencies = TRUE)
-
-```
 
 
-```{r, eval=FALSE}
-# loading the package
-library(poverty)
-```
 
 
-Trois outils principaux sont utilisés pour mesurer les inégalités :
+# 1. Présentation générale
 
-- **L’indice de Gini**, le plus connu et le plus utilisé,
-- **L’indice de Theil**, issu de la théorie de l’entropie,
-- **La courbe de Lorenz**, représentation graphique intuitive des inégalités.
+L'objectif du package poverty est de fournir une suite d'outils simples, reproductibles et puissants pour l'analyse des inégalités sociales et économiques, en particulier la pauvreté et les transferts monétaires ciblés. Ce package s'adresse principalement aux chercheurs, statisticiens, économistes et praticiens du développement qui souhaitent produire des analyses rigoureuses à partir de données d'enquête de type ménage.
 
-# Indice de Gini
+Conçu pour s'inspirer de l'approche d'ADePT de la Banque mondiale, le package poverty propose une automatisation des indicateurs classiques de pauvreté (indicateurs FGT), la répartition de la pauvreté dans la population, les indices d’inégalités (Gini, Theil), ainsi que la modélisation d’interventions via transferts monétaires. Il est adapté aux données du type EHCVM (Enquête Harmonisée sur les Conditions de Vie des Ménages), mais reste totalement flexible pour d'autres bases.
 
-## Définition
+Les trois volets principaux couverts sont :
 
-L’indice de Gini est une mesure synthétique de la concentration d’une distribution. Il varie entre :
+- *Analyse de la pauvreté* : taux de pauvreté, écart de pauvreté, sévérité, distribution par groupe, structure de contribution nationale.
+- *Mesure des inégalités* : indices de Gini et de Theil, courbes de Lorenz.
+- *Simulation de transferts* : création de scénarios ciblés, évaluation de leur efficacité et coût, export complet des résultats.
 
-- **0** : égalité parfaite (tous les individus ont la même part de revenu ou de consommation),
-- **1** : inégalité absolue (un seul individu détient toute la richesse, les autres n'ont rien).
+Cette vignette présente en détail ces fonctionnalités à travers un jeu de données d'exemple.
 
-## Formule
+# 2. Structure des données d'entrée
 
-```{r, eval=FALSE}
+Toutes les fonctions du package poverty prennent en entrée une base de données individuelle ou ménagère au format data.frame, contenant un ensemble minimal de variables nécessaires au calcul des indicateurs.
+## 2.1 Variables minimales requises
+
+Pour fonctionner, les fonctions de calcul de la pauvreté, des inégalités ou des transferts nécessitent les trois variables suivantes (leurs noms exacts peuvent être spécifiés via l’argument params dans chaque fonction) :
+
+- *Variable de consommation ou de revenu* : souvent appelée pcexp ou revenu, cette variable représente le niveau de bien-être économique (en unités monétaires).
+- *Variable de poids* : appelée généralement `hhweight`sur ehcvm, elle indique le poids d’échantillonnage associé à chaque unité (ménage ou individu).
+- *Ligne de pauvreté* : désignée par zref dans les exemples, cette variable peut être une constante (valeur numérique unique) ou une variable colonne (valeur spécifique à chaque unité).
+
+Ces trois éléments sont obligatoires pour les fonctions suivantes :
+- poverty_measures()
+- poverty_distribution()
+- poverty_composition()
+- transfers_summary()
+- inequality_indices()
+
+## 2.2 Variables d’agrégation (séparateurs)
+
+Plusieurs fonctions du package permettent des analyses *par sous-groupes* (appelés séparateurs), comme les régions, le sexe, le milieu de résidence, etc. Ces variables doivent être fournies en tant que colonnes dans la base et peuvent être de type character, factor, ou labelled.
+
+Les séparateurs sont utilisés dans les fonctions suivantes :
+- poverty_measures(..., separateur = c("region", "milieu"))
+- inequality_indices(..., separateur = "hgender")
+- inequality_curve(..., separateur = "region")
+- population_distribution(..., separateur = "milieu")
+
+La fonction transfers_summary() peut également s’appuyer sur une ou plusieurs de ces variables dans la condition d’éligibilité des scénarios.
+
+## 2.3 Autres variables utiles
+
+En fonction des scénarios de transfert ou des besoins d'analyse, d'autres variables qualitatives ou quantitatives peuvent être présentes dans la base, comme :
+
+- *milieu* (urbain/rural)
+- *region* (région administrative)
+- *hage* (âge du chef de ménage)
+- *hhandig* (situation de handicap dans le ménage)
+- *enfant_0_5* (présence d’enfants de moins de 5 ans)
+- *quartile, **decile*, etc.
+
+Ces variables permettent de construire des *scénarios ciblés, de visualiser des **distributions*, ou de segmenter les résultats par groupe.
+
+## 2.4 Exemple synthétique de structure
+
+Voici un aperçu de la structure attendue (exemple simplifié) :
+
+| id_menage | pcexp  | hhweight | zref    | region | milieu | hage | hhandig |
+|-----------|--------|----------|---------|--------|--------|------|---------|
+| 001       | 120000 | 1.2      | 150000  | Dakar  | Urbain | 35   | 0       |
+| 002       | 85000  | 0.9      | 150000  | Thiès  | Rural  | 40   | 1       |
+| ...       | ...    | ...      | ...     | ...    | ...    | ...  | ...     |
+
+Cette structure permet d’utiliser l’ensemble des fonctions du package sans modification supplémentaire.
+
+# 3. Analyse de la pauvreté
+
+L’analyse de la pauvreté constitue une composante essentielle de la compréhension des dynamiques socio-économiques d’un pays. Dans le package poverty, trois fonctions principales permettent de produire un diagnostic rigoureux : poverty_measures(), poverty_distribution(), et poverty_composition(). Chacune de ces fonctions repose sur des fondements théoriques solides et des pratiques statistiques recommandées par la Banque mondiale, notamment dans son outil ADePT.
+
+## 3.1 Définition et mesure de la pauvreté
+
+La pauvreté monétaire est définie comme l’incapacité d’un individu ou d’un ménage à atteindre un niveau de consommation minimal, appelé *seuil de pauvreté* (ou ligne de pauvreté). Ce seuil peut être absolu (ex. : 1,90 $/jour en PPA) ou relatif (ex. : 60 % du revenu médian).
+
+Pour mesurer cette pauvreté, le package implémente les *indicateurs FGT* développés par Foster, Greer et Thorbecke (1984). Ces indicateurs sont fondés sur la formule générale suivante :
+
+\[
+FGT_\alpha = \frac{1}{N} \sum_{i=1}^N \left( \frac{z - y_i}{z} \right)^\alpha \cdot I(y_i < z)
+\]
+
+où :
+- \( N \) est la population totale ;
+- \( z \) est le seuil de pauvreté ;
+- \( y_i \) est le niveau de consommation ou de revenu de l’individu \( i \) ;
+- \( I(y_i < z) \) est une fonction indicatrice qui vaut 1 si l’individu est pauvre, 0 sinon ;
+- \( \alpha \) est un paramètre de sensibilité à la profondeur et à la sévérité de la pauvreté.
+
+### Cas pondéré
+
+Dans les enquêtes, chaque ménage est associé à un *poids d’enquête* noté \( w_i \), permettant d’extrapoler à la population nationale. La formule devient :
+
+\[
+FGT_\alpha = \frac{1}{\sum w_i} \sum_{i=1}^N w_i \left( \frac{z - y_i}{z} \right)^\alpha \cdot I(y_i < z)
+\]
+
+### Interprétation des valeurs de α
+
+- *\( \alpha = 0 \)* : Taux de pauvreté (Headcount Ratio). Il indique la proportion d’individus en dessous du seuil. Cet indicateur est simple mais ne prend pas en compte la profondeur de la pauvreté.
+
+- *\( \alpha = 1 \)* : Écart de pauvreté (Poverty Gap). Il mesure la distance moyenne entre les pauvres et le seuil, exprimée en pourcentage du seuil. Plus l’indicateur est élevé, plus les pauvres sont loin du seuil.
+
+- *\( \alpha = 2 \)* : Sévérité de la pauvreté (Squared Poverty Gap). Il accorde un poids plus élevé aux individus les plus pauvres. C’est un indicateur sensible aux inégalités parmi les pauvres.
+
+## 3.2 Répartition de la pauvreté et de la population
+
+La fonction poverty_distribution() complète le diagnostic en indiquant la manière dont les pauvres et la population totale sont répartis selon un ou plusieurs groupes : région, milieu de résidence, genre du chef de ménage, etc.
+
+Les deux indicateurs produits sont :
+
+- *Part des pauvres dans le groupe* :
+
+\[
+\text{Share of Poor}g = \frac{\sum{i \in g} w_i \cdot I(y_i < z)}{\sum_{i} w_i \cdot I(y_i < z)} \times 100
+\]
+
+- *Part de la population dans le groupe* :
+
+\[
+\text{Share of Population}g = \frac{\sum{i \in g} w_i}{\sum_{i} w_i} \times 100
+\]
+
+Une comparaison de ces deux parts permet de détecter les groupes *surreprésentés* parmi les pauvres. Si, par exemple, un groupe représente 25 % de la population mais 40 % des pauvres, cela traduit une concentration de la pauvreté.
+
+## 3.3 Contribution des groupes à la pauvreté nationale
+
+La fonction poverty_composition() s’intéresse à la *contribution* de chaque groupe aux indicateurs nationaux FGT. L’objectif est d’identifier les groupes qui contribuent le plus à la pauvreté globale du pays.
+
+Pour chaque indicateur FGT, la contribution du groupe \( g \) est calculée comme suit :
+
+\[
+\text{Contribution}{g}^{(\alpha)} = \frac{\sum{i \in g} w_i \cdot \left( \frac{z - y_i}{z} \right)^\alpha \cdot I(y_i < z)}{\sum_{i} w_i \cdot \left( \frac{z - y_i}{z} \right)^\alpha \cdot I(y_i < z)} \times 100
+\]
+
+Ces contributions sont exprimées en pourcentage. Elles permettent de prioriser les interventions en ciblant les groupes qui *concentrent la plus grande part de la pauvreté* nationale.
+
+## 3.4 Synthèse
+
+Les fonctions du package permettent donc de :
+- quantifier la pauvreté avec des indicateurs robustes (FGT) ;
+- localiser la pauvreté dans la structure sociale et territoriale ;
+- déterminer les groupes qui devraient faire l’objet de politiques prioritaires.
+
+Ces résultats peuvent être directement exportés sous forme de tableaux et graphiques via la fonction full_generate_report().
+
+
+# 4. Analyse des inégalités
+
+L’étude des inégalités économiques est complémentaire à celle de la pauvreté. Elle permet d’évaluer non seulement combien de personnes sont pauvres, mais aussi *comment les ressources sont distribuées dans la société*, au-delà du seuil de pauvreté. Le package poverty propose trois instruments principaux pour cette analyse : l’indice de Gini, l’indice de Theil, et la courbe de Lorenz.
+
+## 4.1 Indice de Gini
+
+L’indice de Gini est sans doute la mesure la plus répandue pour évaluer les inégalités de revenu ou de consommation. Il se base sur l’écart cumulé entre les revenus de tous les individus d’une population.
+
+### Définition et formule
+
+La formule théorique de l’indice de Gini est :
+
+\[
 G = \frac{\sum_{i=1}^{n}\sum_{j=1}^{n} |y_i - y_j|}{2n^2\bar{y}}
-```
+\]
 
-avec :
-- \(y_i\) : revenu de l’individu \(i\),
-- \(\bar{y}\) : revenu moyen,
-- \(n\) : taille de la population.
+où :
+- \( y_i \) est le revenu (ou la consommation) de l’individu \( i \),
+- \( \bar{y} \) est la moyenne des revenus de la population,
+- \( n \) est la taille de la population.
 
-## Interprétation
+### Propriétés
 
-- **Gini \u2248 0** : société égalitaire
-- **Gini élevé (ex. 50%)** : forte concentration de richesse
-- Insensible à la structure des extrêmes (très hauts revenus)
+- \( G = 0 \) : égalité parfaite (tous les individus possèdent le même revenu) ;
+- \( G = 1 \) : inégalité extrême (une seule personne détient toute la richesse).
 
-# Indice de Theil
+En pratique, la plupart des sociétés ont un indice de Gini compris entre *0.25* et *0.65*.
 
-## Définition
+### Interprétation
 
-L’indice de Theil provient de la théorie de l’information. Il mesure l’écart entre la distribution observée et une distribution parfaitement égalitaire. Contrairement au Gini, il est **décomposable** (utile pour les comparaisons entre sous-groupes).
+Un *Gini faible* indique une société plus égalitaire, tandis qu’un *Gini élevé* signale une forte concentration de la richesse. Toutefois, il est *moins sensible aux extrêmes* (ultra-riches ou ultra-pauvres) et ne permet pas une décomposition facile entre groupes.
 
-```{r, eval=FALSE}
+## 4.2 Indice de Theil
+
+L’indice de Theil est une mesure issue de la théorie de l'information. Il compare la distribution réelle des revenus à une situation d’égalité parfaite. Contrairement au Gini, il est *entièrement décomposable*, ce qui constitue un avantage important pour l’analyse des sous-populations.
+
+### Formule
+
+\[
 T = \frac{1}{n} \sum_{i=1}^{n} \frac{y_i}{\bar{y}} \log\left( \frac{y_i}{\bar{y}} \right)
-```
+\]
 
-## Propriétés
+où \( y_i \) est le revenu ou la consommation de l’individu \( i \), et \( \bar{y} \) la moyenne.
 
-- \(T = 0\) : égalité parfaite
-- \(T\) croît avec l'inégalité
-- Sensible aux revenus élevés
+### Interprétation
 
-## Avantage principal
+- \( T = 0 \) : égalité parfaite
+- \( T > 0 \) : présence d’inégalités
+- Plus \( T \) est élevé, plus l'inégalité est forte
 
-L'indice de Theil est **entrièrement décomposable** :
+### Décomposition
 
-```{r, eval=FALSE}
+L’intérêt majeur de cet indice est sa *décomposabilité additive* :
+
+\[
 T_{\text{total}} = T_{\text{intra-groupes}} + T_{\text{inter-groupes}}
-```
+\]
 
-Utile pour les comparaisons entre groupes (zones rurales vs urbaines, sexes, etc).
+Cela permet d’analyser combien de l’inégalité totale provient *des écarts entre groupes* (ex. : régions, sexes, milieux) et combien provient des *disparités internes à chaque groupe*.
 
-# Courbe de Lorenz
+## 4.3 Courbe de Lorenz
 
-## Définition
+La *courbe de Lorenz* est une représentation graphique de la répartition des revenus ou de la consommation. Elle permet de visualiser immédiatement la concentration des ressources.
 
-La courbe de Lorenz est une représentation graphique de la distribution du revenu ou de la consommation.
+### Lecture graphique
 
-- Axe horizontal : proportion cumulée de la population (du plus pauvre au plus riche)
-- Axe vertical : proportion cumulée du revenu ou consommation
+- L’axe des abscisses représente la part cumulée de la population (des plus pauvres aux plus riches),
+- L’axe des ordonnées représente la part cumulée des ressources (revenus, consommation),
+- La *diagonale* représente une égalité parfaite : chaque décile de la population possède 10 % des ressources.
 
-## Lecture
+Plus la courbe s’éloigne de cette diagonale, plus les inégalités sont marquées.
 
-- Elle commence en (0,0) et se termine en (1,1)
-- La **diagonale** représente l'égalité parfaite
-- Plus la courbe est **courbée vers le bas**, plus les inégalités sont fortes
+### Lien avec le Gini
 
-## Lien avec l'indice de Gini
+L’indice de Gini est égal à *deux fois l’aire entre la diagonale et la courbe de Lorenz*. C’est pourquoi ces deux outils sont souvent utilisés ensemble.
 
-L'indice de Gini correspond à deux fois l'aire entre la courbe de Lorenz et la diagonale :
+## 4.4 Fonctions du package utilisées pour l’analyse des inégalités
 
-```{r, eval=FALSE}
-G = 2 \cdot \text{Aire entre les deux courbes}
-```
+Le package poverty permet de mobiliser ces trois outils grâce à trois fonctions principales :
 
-# Données intégrées : `welfare`
+### inequality_indices()
 
-Le package inclut une base de données nommée `welfare`, inspirée de l’EHCVM Sénégal 2018, qui contient :
+Cette fonction permet de calculer les *indices de Gini et de Theil* pour une variable donnée, avec ou sans désagrégation. Elle retourne un tableau des valeurs d’inégalités, exprimées en pourcentage.
 
-```{r eval=FALSE}
-data(welfare)
-str(welfare)
-head(welfare)
-```
+Les arguments principaux sont :
+- variable : la variable numérique à évaluer (ex. consommation),
+- separateur (optionnel) : pour produire les indices par sous-groupe (ex. par région),
+- poids : variable de pondération, si applicable.
 
-Elle comprend des variables comme `region`, `milieu`, `hgender`, `age`, `revenu`, `pcexp`, `hhweight` et d’autres données socioéconomiques utiles à l’analyse de la pauvreté.
+### inequality_curve()
 
-# Courbe de Lorenz
+Cette fonction génère la *courbe de Lorenz*, soit pour l’ensemble de la population, soit par sous-groupes. Elle utilise le package ineq pour calculer les parts cumulées de population et de revenu, et retourne un graphique ggplot.
 
-La fonction `inequality_curve()` permet de générer une courbe de Lorenz, globalement ou par sous-groupe (ex: par sexe, par région).
+La courbe permet une visualisation directe de la concentration des ressources et complète l’interprétation des indices.
 
-```{r eval=FALSE}
-# Courbe globale
-inequality_curve(welfare, variable = "pcexp")
+### population_distribution()
 
-# Courbe par région
-inequality_curve(welfare, variable = "pcexp", separateur = "region")
-```
+Bien qu’elle ne soit pas une mesure d’inégalité à proprement parler, cette fonction permet de *décrire la répartition démographique* selon un ou plusieurs critères. Cela est particulièrement utile pour contextualiser les résultats d’inégalité.
 
-La fonction retourne soit un graphique `ggplot2`, soit une liste de graphiques si l’option `separateur` est utilisée.
+Elle accepte des variables qualitatives (milieu, sexe...) ou continues (âge, consommation...), et permet une représentation graphique pondérée ou non, selon les objectifs de l’analyse.
 
-# Répartition de la population
+## 4.5 Intérêt analytique
 
-La fonction `population_distribution()` permet d’étudier la répartition d’une variable qualitative (sexe, région...) ou quantitative (âge, revenu...) avec ou sans pondération :
+L’analyse combinée des indices de Gini, de Theil et des courbes de Lorenz permet :
 
-```{r eval=FALSE}
-# Variable qualitative
-population_distribution(welfare, separateur = "milieu")
+- d’obtenir un *diagnostic synthétique* et quantitatif des inégalités,
+- de *visualiser* la concentration des ressources,
+- de *comparer les sous-populations* entre elles,
+- de prioriser les interventions politiques vers les zones ou les groupes les plus désavantagés.
 
-# Variable quantitative pondérée
-population_distribution(welfare, separateur = "age", poids = "hhweight")
-```
+Ces éléments sont essentiels dans une démarche d’analyse de la pauvreté et des inégalités à visée opérationnelle (ciblage des transferts, évaluation d’impact, comparaison régionale, etc.).
 
-# Indices d'inégalité : Gini et Theil
+# 5. Scénarios de transferts monétaires et exportation des résultats
 
-La fonction `inequality_indices()` calcule les indices de Gini et de Theil, globalement ou par sous-groupe :
+## 5.1 Pourquoi simuler des scénarios de transferts ?
 
-```{r eval=FALSE}
-# Indices globaux
-inequality_indices(welfare, variable = "pcexp")
+L'analyse de la pauvreté et des inégalités ne saurait se limiter à un diagnostic statique. Dans une perspective de *réduction active de la pauvreté, il est crucial de **simuler des politiques publiques* concrètes afin d’évaluer *leur impact potentiel sur les indicateurs sociaux*.
 
-# Indices par région
-inequality_indices(welfare, variable = "pcexp", separateur = "region")
-```
+Les *transferts monétaires ciblés* sont l’une des politiques les plus utilisées par les gouvernements et les partenaires techniques et financiers. Ils peuvent prendre plusieurs formes : transferts universels, ciblage géographique, transferts conditionnels (âge, handicap, etc.). Il devient alors essentiel de répondre aux questions suivantes :
 
-Les résultats sont retournés sous forme de `data.frame` avec des valeurs exprimées en pourcentage.
+- Quelle est l’efficacité d’un scénario donné sur la réduction de la pauvreté ?
+- Quel est *le coût global* du programme de transfert ?
+- Quelle est *l’efficience* de chaque scénario, c’est-à-dire le *rapport entre le gain social (réduction de la pauvreté)* et *le coût économique (en % du PIB)* ?
 
-# Gestion des variables labellisées (`haven`)
+C’est précisément dans cette optique que le package poverty a été conçu pour intégrer une analyse fine des *scénarios de transferts*.
 
-Toutes les fonctions reconnaissent automatiquement les colonnes importées via le package `haven` (ex. : SPSS, Stata, etc.) et adaptent les traitements en conséquence :
+## 5.2 Fonction transfers_summary()
 
-- Conversion des labels en facteurs pour les séparateurs (ex: sexe, région)
-- Suppression des labels pour les variables numériques (revenu, consommation)
+La fonction transfers_summary() permet de :
 
-# Conclusion
+- Définir une ou plusieurs *conditions d’éligibilité* aux transferts (ex : habiter en zone rurale, avoir un enfant de moins de 5 ans, etc.),
+- Appliquer un *montant fixe* de transfert aux ménages éligibles,
+- Simuler les *niveaux de consommation après transfert*,
+- Recalculer les *indicateurs de pauvreté FGT*,
+- Calculer le *coût global* du scénario,
+- Estimer l’*efficience* du scénario.
 
-Le package `poverty` a été conçu pour faciliter la production d’analyses descriptives dans le cadre des études sur la pauvreté et les inégalités. Grâce à des fonctions cohérentes, il permet de :
+### Structure des scénarios
 
-- Calculer et comparer des indicateurs classiques ;
-- Visualiser la distribution des revenus ;
-- Automatiser l’exploration de bases comme celles de l’EHCVM ;
-- Générer rapidement des résultats exploitables pour la recherche ou le reporting institutionnel.
+Chaque scénario est défini comme une liste contenant :
+- name : nom du scénario (pour l’affichage),
+- condition : expression logique sur les données (ex : milieu == "Rural"),
+- amount : montant du transfert (par ménage éligible),
+- id (optionnel) : identifiant personnalisé.
 
-Pour plus de détails, consultez les aides spécifiques :
+### Sorties principales
 
-```{r}
-?inequality_curve
-?population_distribution
-?inequality_indices
-?welfare
-```
+La fonction retourne une *liste* contenant deux éléments :
+
+1. table : un tableau résumant les résultats de chaque scénario :  
+   - headcount : nouveau taux de pauvreté après transfert,  
+   - delta_poverty : réduction du taux de pauvreté (en points),  
+   - cost : coût total du programme,  
+   - cost_perc_pib : coût en % du PIB,  
+   - efficiency : mesure d’efficience.
+
+2. plot_efficiency : un graphique ggplot2 montrant l’efficience des différents scénarios simulés.
+
+### Formule de l’efficience
+
+L’*efficience* d’un scénario est définie comme :
+
+\[
+\text{Efficience} = \frac{\Delta \text{Pauvreté}}{\text{Coût en \% du PIB}} = \frac{H_0 - H_1}{\frac{\text{Coût total}}{\text{PIB}}}
+\]
+
+où :
+- \( H_0 \) est le taux de pauvreté initial,
+- \( H_1 \) est le taux après transfert,
+- le coût total est pondéré par les poids de sondage.
+
+Cette mesure permet de comparer les scénarios entre eux *à budget équivalent*, et ainsi de guider les choix de politique.
+
+## 5.3 Fonction full_generate_report()
+
+Une fois les différentes analyses effectuées, il est souvent nécessaire de *compiler tous les résultats dans un fichier unique*, clair et bien structuré, que ce soit pour la communication interne, la validation institutionnelle ou la préparation d’un rapport.
+
+La fonction full_generate_report() a été conçue pour *générer automatiquement un fichier Excel complet, avec plusieurs feuilles et une **table des matières interactive*.
+
+### Organisation du fichier Excel
+
+Le fichier généré contient plusieurs feuilles :
+
+1. Table_of_Contents : table des matières avec hyperliens internes,
+2. Population_Distribution : graphique de répartition démographique par groupe,
+3. Poverty_Measures, Poverty_Distribution, Poverty_Composition : tableaux des indicateurs de pauvreté,
+4. Plot_Measures, Plot_Distribution, Plot_Composition : visualisations des indicateurs,
+5. Plot_Measures_All, Plot_Distribution_All, Plot_Composition_All : versions multi-indicateurs des courbes,
+6. Transfer_Scenarios : tableau et graphique d'efficience des transferts,
+7. Inequality_Indices : tableau des indices de Gini et de Theil,
+8. Lorenz_Curves : une ou plusieurs courbes de Lorenz par groupe.
+
+### Atouts de l’exportation
+
+- *Automatisée* : tout est généré à partir des résultats déjà calculés.
+- *Ergonomique* : chaque feuille contient un titre clair, des tableaux ou graphes filtrables.
+- *Professionnel* : convient à des livrables d’évaluation de politique publique ou à des rapports d’institution.
+- *Souple* : possibilité d’ajouter ou de retirer certaines analyses via les arguments de la fonction.
+
+---
+
+## 5.4 Synthèse
+
+L’inclusion d’analyses de transferts monétaires et l’exportation Excel fait du package poverty un outil *complet, **modulaire* et *orienté décision. Il permet non seulement de mesurer, mais aussi de **simuler et comparer les effets de politiques ciblées, tout en fournissant un **rapport final prêt à l’usage*.
+
+Cela constitue une *valeur ajoutée importante* dans les contextes où les décideurs ont besoin de résultats synthétiques et directement exploitables à partir des données disponibles.
+
+---
+
+# 6. Références bibliographiques
 
 
+1. *World Bank (2022). *Poverty and Shared Prosperity 2022: Correcting Course.**
 
+   
+   Lien : [https://www.worldbank.org/en/publication/poverty-and-shared-prosperity](https://www.worldbank.org/en/publication/poverty-and-shared-prosperity)
+
+2. *World Bank (2024). *Poverty, Prosperity, and Planet 2024: Pathways Out of the Polycrisis.**
+
+  
+   Lien : [https://www.worldbank.org/en/publication/poverty-prosperity-and-planet](https://www.worldbank.org/en/publication/poverty-prosperity-and-planet)
+
+3. *Ferreira, F. H. G., & Lugo, M. A. (2013). *Multidimensional Poverty Measures. The World Bank.**
+
+   
+   Lien : [https://openknowledge.worldbank.org/handle/10986/11979](https://openknowledge.worldbank.org/handle/10986/11979)

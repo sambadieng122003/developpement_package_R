@@ -1,0 +1,63 @@
+#' Summary of Poverty Indicators
+#'
+#' Computes a comprehensive summary of poverty using three complementary components:
+#' \code{poverty_measures()}, \code{poverty_distribution()}, and \code{poverty_composition()}.
+#' This function serves as a wrapper to quickly generate key poverty statistics
+#' across specified population groups.
+#'
+#' @param data A data.frame containing the necessary variables for poverty analysis
+#' (consumption, weights, and optionally poverty line).
+#' @param separateur A character vector specifying one or more grouping variables
+#' (e.g., "region", "sex"), or \code{NULL} for national-level indicators.
+#' @param params A named list containing:
+#'   \itemize{
+#'     \item \code{var_cons}: name of the welfare variable (e.g., "pcexp")
+#'     \item \code{var_poids}: name of the sampling weight variable
+#'     \item \code{var_seuil}: poverty line, either as a numeric value or column name
+#'   }
+#'
+#' @return A named list with three elements:
+#'   \itemize{
+#'     \item \code{poverty_measures}: FGT indicators (headcount, gap, severity)
+#'     \item \code{poverty_distribution}: distribution of the poor and population by group
+#'     \item \code{poverty_composition}: contribution of each group to national poverty
+#'   }
+#'
+#' @examples
+#' df <- data.frame(
+#'   pcexp = c(100000, 200000, 150000, 300000, 120000, 50000),
+#'   hhweight = c(1.5, 1.2, 1.8, 2.0, 1.3, 0.9),
+#'   zref = c(150000, 150000, 150000, 150000, 150000, 150000),
+#'   milieu = c("Urbain", "Rural", "Urbain", "Urbain", "Rural", "Rural")
+#' )
+#'
+#' poverty_summary(
+#'   data = df,
+#'   separateur = "milieu",
+#'   params = list(
+#'     var_cons = "pcexp",
+#'     var_poids = "hhweight",
+#'     var_seuil = "zref"
+#'   )
+#' )
+#'
+#' @export
+
+poverty_summary <- function(data, separateur = NULL, params = list()) {
+
+  # Appel des fonctions de base
+  measures     <- poverty_measures(data, separateur, params)
+  distribution <- poverty_distribution(data, separateur, params)
+  composition  <- poverty_composition(data, separateur, params)
+
+  # Regroupement des résultats
+  results <- list(
+    poverty_measures = measures,
+    poverty_distribution = distribution,
+    poverty_composition = composition
+  )
+
+  return(results)
+}
+
+
